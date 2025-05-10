@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { UploadCloud } from "lucide-react";
@@ -14,6 +13,7 @@ export function FileUploader({ onUpload, className }: FileUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -91,13 +91,19 @@ export function FileUploader({ onUpload, className }: FileUploaderProps) {
           </p>
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
-          <label htmlFor="file-upload">
+          <label>
             <div className="flex justify-center">
-              <Button disabled={isUploading} className="mt-2">
+              <Button
+                disabled={isUploading}
+                className="mt-2"
+                type="button"
+                onClick={() => inputRef.current?.click()}
+              >
                 {isUploading ? "Uploading..." : "Select Files"}
               </Button>
             </div>
             <input
+              ref={inputRef}
               id="file-upload"
               type="file"
               accept=".pdf"
