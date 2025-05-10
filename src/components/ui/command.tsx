@@ -35,24 +35,77 @@ const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
   )
 }
 
+interface CommandInputProps
+  extends React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> {
+  onSearch?: (value: string) => void
+}
+
 const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-    <CommandPrimitive.Input
-      ref={ref}
-      className={cn(
-        "flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
-      {...props}
-    />
-  </div>
-))
+  CommandInputProps
+>(({ className, onSearch, value: propValue, onChange: propOnChange, onKeyDown: propOnKeyDown, defaultValue: propDefaultValue, ...restProps }, ref) => {
+  const [inputValue, setInputValue] = React.useState(() => {
+    if (propValue !== undefined) return String(propValue);
+    if (propDefaultValue !== undefined) return String(propDefaultValue);
+    return "";
+  });
+
+  React.useEffect(() => {
+    if (propValue !== undefined) {
+      setInputValue(String(propValue));
+    }
+  }, [propValue]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      if (onSearch) {
+        onSearch(inputValue);
+      }
+      // Prevent form submission if inside a form
+      e.preventDefault();
+    }
+    // Call parent's onKeyDown if provided
+    if (propOnKeyDown) {
+      propOnKeyDown(e);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    // Update internal state. If controlled, useEffect will sync with propValue if it differs.
+    setInputValue(newValue);
+
+    // Call parent's onChange if provided
+    if (propOnChange) {
+      propOnChange(e);
+    }
+  };
+
+  return (
+    <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+      <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+      <CommandPrimitive.Input
+        ref={ref}
+        className={cn(
+          "flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        value={inputValue} // Use internal state, synced with propValue
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        {...restProps} // Pass down other props (e.g., placeholder)
+      />
+    </div>
+  );
+});
 
 CommandInput.displayName = CommandPrimitive.Input.displayName
+
+// Usage note:
+// To make search work, pass an `onSearch` prop to CommandInput from your parent component:
+// <CommandInput onSearch={value => { /* do your search here */ }} />
+// If you want to control the input's value from the parent, pass `value` and `onChange` props.
+// For an initial value in an uncontrolled input, you can use the `defaultValue` prop.
 
 const CommandList = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.List>,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/header";
 import { FileUploader } from "@/components/file-uploader";
@@ -12,6 +11,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 const Index = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const { toast } = useToast();
   
   // Mock data for initial documents
@@ -63,10 +63,19 @@ const Index = () => {
     }
   };
 
+  const handleSearch = (value: string) => {
+    setSearchTerm(value.toLowerCase());
+  };
+
+  const filteredDocuments = documents.filter(doc =>
+    doc.title.toLowerCase().includes(searchTerm) ||
+    (doc.description && doc.description.toLowerCase().includes(searchTerm)),
+  );
+
   return (
     <ThemeProvider defaultTheme="system">
       <div className="min-h-screen flex flex-col">
-        <Header />
+        <Header onSearch={handleSearch} />
         <main className="flex-1 container py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-1 space-y-6">
@@ -78,7 +87,7 @@ const Index = () => {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-bold">Your Documents</h2>
-                  {documents.length > 0 && (
+                  {filteredDocuments.length > 0 && (
                     <Button 
                       variant="ghost" 
                       size="sm"
@@ -89,13 +98,15 @@ const Index = () => {
                   )}
                 </div>
                 
-                {documents.length === 0 ? (
+                {filteredDocuments.length === 0 ? (
                   <div className="text-center py-8 border rounded-lg">
-                    <p className="text-muted-foreground">No documents uploaded yet</p>
+                    <p className="text-muted-foreground">
+                      {searchTerm ? "No documents match your search." : "No documents uploaded yet"}
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {documents.map((document) => (
+                    {filteredDocuments.map((document) => (
                       <DocumentCard
                         key={document.id}
                         document={document}
