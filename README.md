@@ -1,6 +1,5 @@
 # TalkingDocs - AI Document Reader
 
-<!-- Add your demo video here -->
 ![Demo Video](public/Demo_RAG.mp4)
 
 ## Overview
