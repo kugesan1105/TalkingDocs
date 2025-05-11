@@ -1,73 +1,92 @@
-# Welcome to your Lovable project
+# TalkingDocs - AI Document Reader
 
-## Project info
+<!-- Add your demo video here -->
+![Demo Video](public/Demo_RAG.mp4)
 
-**URL**: https://lovable.dev/projects/f4c4a1c8-30d7-40b2-93bb-0a8602bb0884
+## Overview
 
-## How can I edit this code?
+TalkingDocs is a RAG-powered AI document reader that allows you to:
+- Upload PDF documents
+- Ask questions about your documents
+- Get AI-generated answers with source references
+- Analyze document content efficiently
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- PDF text extraction and processing
+- AI-powered question answering using Google Gemini model
+- RAG (Retrieval-Augmented Generation) for better context awareness
+- Source attribution for answers
+- Simple and intuitive user interface
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f4c4a1c8-30d7-40b2-93bb-0a8602bb0884) and start prompting.
+## Setup Instructions
 
-Changes made via Lovable will be committed automatically to this repo.
+### Frontend Setup
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
+1. Clone the repository
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
+cd ai-whisper-reader
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. Install frontend dependencies
+```sh
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Start the frontend development server
+```sh
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Backend Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Navigate to the backend directory
+```sh
+cd backend
+```
 
-**Use GitHub Codespaces**
+2. Install backend dependencies
+```sh
+pip install -r requirements.txt
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+3. Set up your Google API key
+```sh
+export GOOGLE_API_KEY="your-google-api-key-here"
+```
 
-## What technologies are used for this project?
+4. Start the backend server
+```sh
+uvicorn main:app --reload
+```
 
-This project is built with:
+## Requirements
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Frontend
+- Node.js
+- npm
 
-## How can I deploy this project?
+### Backend
+- Python 3.8+
+- Google Gemini API key (obtain from [Google AI Studio](https://ai.google.dev/))
 
-Simply open [Lovable](https://lovable.dev/projects/f4c4a1c8-30d7-40b2-93bb-0a8602bb0884) and click on Share -> Publish.
+## API Endpoints
 
-## Can I connect a custom domain to my Lovable project?
+- `POST /query` - Submit a document and query to get AI-generated answers
 
-Yes, you can!
+## Development
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+This project uses:
+- Vite, TypeScript, and React for the frontend
+- FastAPI and LangChain for the backend
+- Gemini models from Google for AI capabilities
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Deployment
+
+For deployment options, see the Lovable documentation:
+- [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## License
+
+[MIT License](LICENSE)
