@@ -29,19 +29,9 @@ const Index = () => {
     if (stored) {
       setDocuments(JSON.parse(stored));
     } else {
-      const mockDocuments: Document[] = [
-        {
-          id: "1",
-          title: "GPT-4 Technical Report.pdf",
-          description: "Technical specifications and capabilities of OpenAI's GPT-4 model",
-          createdAt: new Date(2023, 2, 15).toISOString(),
-          fileSize: 2400000,
-          pages: 32,
-          contents: ["Example page 1 content", "Example page 2 content"]
-        }
-      ];
-      setDocuments(mockDocuments);
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(mockDocuments));
+      // Start with an empty array instead of mock documents
+      setDocuments([]);
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     }
   }, []);
 
