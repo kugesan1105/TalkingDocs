@@ -7,39 +7,107 @@ import { Document } from "@/types/document";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeProvider } from "@/components/theme-provider";
+// Modern ES module import for worker in PDF.js v5+
+import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
+import worker from 'pdfjs-dist/build/pdf.worker.mjs?worker';
+
+// Attach worker
+GlobalWorkerOptions.workerPort = new worker();
+
+const STORAGE_KEY = "uploadedDocuments";
+
 
 const Index = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const { toast } = useToast();
-  
-  // Mock data for initial documents
+
+  // Load documents from sessionStorage on mount
   useEffect(() => {
-    // Simulating document fetch
-    const mockDocuments: Document[] = [
-      {
-        id: "1",
-        title: "GPT-4 Technical Report.pdf",
-        description: "Technical specifications and capabilities of OpenAI's GPT-4 model",
-        createdAt: new Date(2023, 2, 15).toISOString(),
-        fileSize: 2400000,
-        pages: 32
-      }
-    ];
-    
-    setDocuments(mockDocuments);
+    const stored = sessionStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      setDocuments(JSON.parse(stored));
+    } else {
+      const mockDocuments: Document[] = [
+        {
+          id: "1",
+          title: "GPT-4 Technical Report.pdf",
+          description: "Technical specifications and capabilities of OpenAI's GPT-4 model",
+          createdAt: new Date(2023, 2, 15).toISOString(),
+          fileSize: 2400000,
+          pages: 32,
+          contents: ["Example page 1 content", "Example page 2 content"]
+        }
+      ];
+      setDocuments(mockDocuments);
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(mockDocuments));
+    }
   }, []);
 
-  const handleFileUpload = (files: File[]) => {
-    const newDocuments: Document[] = files.map((file, index) => ({
-      id: `doc-${Date.now()}-${index}`,
-      title: file.name,
-      createdAt: new Date().toISOString(),
-      fileSize: file.size,
-      pages: Math.floor(Math.random() * 20) + 5, // Mock page count
-    }));
+  // Save documents to sessionStorage whenever they change
+  useEffect(() => {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(documents));
+  }, [documents]);
 
+  // Helper to extract PDF contents and page count using PDF.js
+  const extractPdfContents = async (file: File) => {
+    console.log("Extracting PDF contents...");
+    console.log("File:", file);
+    const arrayBuffer = await file.arrayBuffer();
+    console.log("ArrayBuffer:", arrayBuffer);
+    const pdf = await getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+    console.log("PDF loaded:", pdf);
+
+    const contents: string[] = [];
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const text = textContent.items.map((item: any) => item.str).join(' ');
+      contents.push(text);
+    }
+
+    return {
+      contents,
+      pages: pdf.numPages,
+    };
+  };
+
+  const handleFileUpload = async (files: File[]) => {
+    const newDocuments: Document[] = [];
+    for (let index = 0; index < files.length; index++) {
+      const file = files[index];
+      let contents: string[] = [];
+      let pages = 1;
+      if (file.type === "application/pdf") {
+        try {
+          const result = await extractPdfContents(file);
+          contents = result.contents;
+          pages = result.pages;
+        } catch (e) {
+          console.error("Failed to parse PDF:", e);
+          contents = ["Failed to extract PDF contents. Check console for details."];
+          pages = 0;
+        }
+      } else {
+        // For non-PDFs, just read as text
+        const text = await file.text();
+        contents = [text];
+      }
+      const doc: Document = {
+        id: `doc-${Date.now()}-${index}`,
+        title: file.name,
+        createdAt: new Date().toISOString(),
+        fileSize: file.size,
+        pages,
+        contents,
+        description: undefined,
+      };
+      newDocuments.push(doc);
+      // Print contents to console
+      console.log(`Contents of "${file.name}":`, contents);
+    }
     setDocuments([...newDocuments, ...documents]);
   };
 
@@ -65,6 +133,44 @@ const Index = () => {
 
   const handleSearch = (value: string) => {
     setSearchTerm(value.toLowerCase());
+  };
+
+  const handleQuerySubmit = async (query: string) => {
+    if (!selectedDocument) {
+      toast({
+        title: "No document selected",
+        description: "Please select a document to query.",
+      });
+      return null;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8000/query", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          document: selectedDocument,
+          query,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch query results");
+      }
+
+      const data = await response.json();
+      // data: { answer: string, sources: [{ text: string, page: number }] }
+      return data;
+    } catch (error) {
+      console.error("Error during query:", error);
+      toast({
+        title: "Query Failed",
+        description: "An error occurred while processing your query.",
+      });
+      return null;
+    }
   };
 
   const filteredDocuments = documents.filter(doc =>
@@ -121,7 +227,10 @@ const Index = () => {
             
             <div className="md:col-span-2">
               <h2 className="text-2xl font-bold mb-4">AI Query Interface</h2>
-              <QueryInterface selectedDocument={selectedDocument} />
+              <QueryInterface 
+                selectedDocument={selectedDocument} 
+                onQuerySubmit={handleQuerySubmit} 
+              />
             </div>
           </div>
         </main>

@@ -1,4 +1,3 @@
-
 export interface Document {
   id: string;
   title: string;
@@ -6,4 +5,5 @@ export interface Document {
   createdAt: string;
   fileSize: number;
   pages: number;
+  contents: string[]; // Array of page contents
 }

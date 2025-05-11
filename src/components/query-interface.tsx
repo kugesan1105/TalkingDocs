@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,52 +6,25 @@ import { Loader2 } from "lucide-react";
 
 interface QueryInterfaceProps {
   selectedDocument: Document | null;
+  onQuerySubmit: (query: string) => Promise<{ answer: string; sources: { text: string; page: number }[] } | null>;
 }
 
-interface QueryResult {
-  answer: string;
-  sources: {
-    text: string;
-    page: number;
-  }[];
-}
-
-export function QueryInterface({ selectedDocument }: QueryInterfaceProps) {
+export function QueryInterface({ selectedDocument, onQuerySubmit }: QueryInterfaceProps) {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<QueryResult | null>(null);
+  const [result, setResult] = useState<{ answer: string; sources: { text: string; page: number }[] } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!query.trim() || !selectedDocument) return;
-    
     setIsLoading(true);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      // Mock response data
-      const mockResult: QueryResult = {
-        answer: "Based on the document, GPT-4 represents a significant advancement in AI language models. It demonstrates improved capabilities in reasoning, following instructions, and reducing hallucinations compared to previous models. The document highlights that GPT-4 shows enhanced performance across various benchmarks and real-world scenarios, particularly in complex reasoning tasks and creative applications. However, it still has limitations regarding factual accuracy and needs careful human oversight when deployed in critical applications.",
-        sources: [
-          { 
-            text: "GPT-4 shows significant improvements in reasoning capabilities and reduced hallucinations compared to GPT-3.5.", 
-            page: 12 
-          },
-          { 
-            text: "The model performs exceptionally well on standardized tests and demonstrates improved instruction following.", 
-            page: 14 
-          },
-          { 
-            text: "Despite improvements, GPT-4 still requires careful human supervision for critical applications to ensure factual accuracy.", 
-            page: 23 
-          }
-        ]
-      };
-      
-      setResult(mockResult);
+    setResult(null);
+    try {
+      const res = await onQuerySubmit(query);
+      if (res) setResult(res);
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   if (!selectedDocument) {
@@ -106,7 +78,6 @@ export function QueryInterface({ selectedDocument }: QueryInterfaceProps) {
                 {result.answer}
               </div>
             </div>
-            
             <div>
               <h3 className="font-medium mb-2">Sources</h3>
               <div className="space-y-3">
