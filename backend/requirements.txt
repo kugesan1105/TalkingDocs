@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-dotenv
+pydantic
+typing-extensions
+langchain
+langchain-core
+langchain-text-splitters
+langchain-google-genai
+langgraph
